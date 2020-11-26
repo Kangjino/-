@@ -1,0 +1,336 @@
+#ifndef UI_H
+#define UI_H
+
+//아래 println(string), print(string)에서 string 사용했기 때문에 include시킴
+#include <string>
+using namespace std;
+
+class UI {
+	static int printGetInt(string msg); // msg를 출력하고 정수 값 입력 받아 리턴
+public:
+	static int getMainMenu(); // 메인 메뉴 종류 출력하고 메인 메뉴 값 입력 받아 리턴
+	static int getShapeType(); // 삽입할 도형 종류 출력하고 종류 값 입력 받아 리턴
+	static int getShapeIndex(); // 메시지 출력하고 삭제할 도형 인덱스 입력 받아 리턴
+	static void println(string msg); // msg 문자열 및 줄 바꾸기 출력
+	static void print(string msg); // msg문자열 출력
+	static void print(int val); // 정수 값 val 출력
+};
+#endif
+
+
+#include <iostream>
+using namespace std;
+#include "UI.h"
+
+// UI의 모든 멤버 함수들은 static 함수이므로 함수 정의시 static을 사용하지 않는다
+
+int UI::printGetInt(string msg) {
+	UI::print(msg);
+	int hi;
+	cin >> hi;
+	return hi;
+}
+
+void UI::println(string msg) {
+	cout << msg << endl;
+}
+
+void UI::print(string msg) {
+	cout << msg;
+}
+
+void UI::print(int msg) {
+	cout << msg;
+}
+
+int UI::getMainMenu() {
+	int a;
+	cout << ("삽입:1, 삭제:2, 모두보기:3, 종료:4 >> ");
+	cin >> a;
+	return a;
+}
+
+int UI::getShapeType() {
+	int a;
+	cout << ("선:1, 원:2,사각형:3 >> ");
+	cin >> a;
+	return a;
+}
+
+int UI::getShapeIndex() {
+	int a;
+	cout << ("삭제하고자 하는 도형의 인덱스 >> ");
+	cin >> a;
+	return a;
+}
+
+
+
+
+#ifndef CIRCLE_H
+#define CIRCLE_H
+#include "Shape.h"
+
+class Circle :public Shape {
+protected:
+	virtual void draw();
+};
+#endif
+
+
+
+
+#include <iostream>
+using namespace std;
+#include "Shape.h"
+#include "Circle.h"
+
+void Circle::draw() {
+	cout << "Circle" << endl;
+}
+
+
+#ifndef RECT_H
+#define RECT_H
+#include "Shape.h"
+class Rect : public Shape {
+protected:
+	virtual void draw();
+};
+#endif
+
+
+#include <iostream>
+using namespace std;
+#include "Shape.h"
+#include "Rect.h"
+
+void Rect::draw() { cout << "Rectangle" << endl; }
+
+#ifndef SHAPE_H
+#define SHAPE_H
+class Shape {
+	Shape* next;
+protected:
+	virtual void draw() = 0;
+public:
+	Shape() { next = 0; }
+	virtual ~Shape() { ; }
+	void paint();
+	Shape* add(Shape* p);
+	Shape* getNext() { return next; }
+};
+#endif
+
+
+#include <iostream>
+using namespace std;
+#include "Shape.h"
+
+
+void Shape::paint() { draw(); }
+
+//void Shape::draw() { cout << "--Shape--" << endl; }
+
+Shape* Shape::add(Shape* p) {
+	this->next = p;
+	return p;
+}
+
+
+#ifndef LINE_H
+#define LINE_H
+#include "Shape.h"
+class Line : public Shape {
+protected:
+	virtual void draw();
+};
+#endif
+
+
+#include <iostream>
+using namespace std;
+#include "Shape.h"
+#include "Line.h"
+
+void Line::draw() { cout << "Line" << endl; }
+
+
+#ifndef GRAPHICEDITOR_H
+#define GRAPHICEDITOR_H
+
+class Shape; // 아래에 Shape*가 사용 되었기 때문에 클래스 이름을 먼저 선언해야 하며,실제 이 클래스에 대한 정의는 shape.h에 존재한다.
+
+class GraphicEditor {
+	enum { LINE=1, CIRCLE=2, RECT=3}; // 삽입할 그래픽의  종류
+	enum { EDIT=1, REMOVE = 2, PAINT = 3, EXIT =4}; //  메인 메뉴의 종류
+	Shape* pStart; // 삽입된 그래픽 객체들의 linked 리스트의 맨 처음을 가리킨다.
+	Shape* pLast; // 삽입된 그래픽 객체들의 linked 리스트의 맨 마지막을 가리킨다.
+	void add(Shape* p); // 새로운 그래픽 객체 p를 맨 마지막인 pLast 다음에 추가한다.
+protected:
+	void paint(); //  삽입된 모든 그래픽 객체들을 화면에 출력
+	void edit(); //  새로운 그래픽 객체 종류를 입력 받아 리스트에 삽입함
+	void remove(); // 삭제할 그래픽 객체의 번호를 입력 받아 해당 객체를 삭제함
+	void remove(int shapeIndex);
+public:
+	GraphicEditor();
+	~GraphicEditor();
+	void run();
+};
+#endif
+
+
+#include <iostream>
+using namespace std;
+#include "UI.h"
+#include "Line.h"
+#include "Rect.h"
+#include "Circle.h"
+#include "Shape.h"
+#include "GraphicEditor.h"
+
+GraphicEditor::GraphicEditor() {
+	pStart = nullptr;
+	pLast = nullptr;
+}
+
+GraphicEditor::~GraphicEditor() {
+	for (Shape* p = pStart, *q; p != nullptr; p = q) {
+		q = p->getNext();
+		delete p;
+	}
+}
+
+void GraphicEditor::run() {
+	UI::println("그래픽 에디터입니다.");
+	while (true) {
+		int menu = UI::getMainMenu();
+		switch (menu) {
+		case EDIT: // 삽입, EDIT는 enum열거자이며 상수처럼 사용가능
+			edit(); break;
+		case REMOVE:
+			remove(); break;
+		case PAINT:
+			paint(); break;
+		case EXIT:
+			return;
+		// 그외는 명령 선택 오류 출력 해야함
+		}
+	}
+}
+
+void GraphicEditor::paint() {
+	Shape* p = pStart;
+	/*
+	if (p == nullptr) { UI::print("그려진 도형이 없습니다."); return; }
+	for(int i=0; p!= nullptr; ++i, p = p->getNext()) {
+		UI::print(i);
+		UI::print(": ");
+		p->paint();
+	}
+	*/
+	int i = 0;
+	while (p != NULL) {
+		UI::print(i);
+		UI::print(": ");
+		p->paint();
+		p = p->getNext();
+		i++;
+	}
+}
+
+void GraphicEditor::edit() {
+	int shapetype = UI::getShapeType();
+
+	switch (shapetype) {
+	case LINE:
+		add(new Line()); break;
+	case CIRCLE:
+		add(new Circle()); break;
+	case RECT:
+		add(new Rect()); break;
+	default:
+		UI::println("도형 선택 오류");
+	}
+}
+
+void GraphicEditor::add(Shape* p) {
+	if (pStart == nullptr) {
+		pStart = p;
+		pLast = p;
+	}
+	else {
+		pLast->add(p);
+		pLast = p;
+	}
+}
+
+/*
+void GraphicEditor::remove() {
+	if (pStart == NULL) UI::println("그려진 도형이 없습니다.");
+	int shapeIndex = UI::getShapeIndex();
+
+	Shape* p = pStart;
+	Shape* beforeP = pStart;
+
+	for (int i = 0; i < shapeIndex; ++i) {
+		beforeP = p;
+		p = p->getNext();
+		if (p == nullptr) {
+			UI::print("도형의 인덱스가 개수보다 큽니다.");
+			return;
+		}
+	}
+	Shape* pNext = beforeP->add(p->getNext());
+	delete p;
+	if (p == pStart) pStart = pNext;
+
+	if (p == pLast) {
+		if (pStart == NULL) pLast = NULL;
+		else pLast = beforeP;
+	}
+
+}
+*/
+
+
+
+void GraphicEditor::remove(int shapeIndex) {
+	if (pLast == NULL) UI::println("도형이 없습니다.");
+	int i = 0;
+	Shape* p = pStart;
+	Shape* beforeP = pStart;
+	if (shapeIndex == 0) {
+		pStart = p->getNext();
+		delete p;
+		return;
+	}
+	while (i < shapeIndex) {
+		i++;
+		beforeP = p;
+		p = p->getNext();
+	}
+	beforeP->add(p->getNext());
+	delete p;
+}
+
+void GraphicEditor::remove() {
+	int shapeIndex = UI::getShapeIndex();
+	remove(shapeIndex);
+}
+
+#include <iostream>
+using namespace std;
+#include "Shape.h"
+#include "Circle.h"
+#include "Line.h"
+#include "Rect.h"
+#include "UI.h"
+#include "GraphicEditor.h"
+
+int main()
+{
+	GraphicEditor* g = new GraphicEditor;
+	g->run();
+	delete g;
+}
